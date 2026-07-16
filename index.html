@@ -167,7 +167,7 @@ opacity: .80,
 
 
   popupTemplate: {
-    title: "Precinct",
+    title: "Hidalgo County",
     content: [
       {
         type: "fields",
@@ -308,16 +308,18 @@ const employmentLayer = new FeatureLayer({
   outFields: ["*"],
 
   popupTemplate: {
-    title: "{NAME}, {STATE_NAME}",
+    title: "{COUNTY}",
 
     content: [
       {
         type: "fields",
         fieldInfos: [
           {
-            fieldName: "NAME",
-            label: "County"
+            fieldName: "County",
+            label: "County",
+            visible: "true"
           },
+          
           {
             fieldName: "STATE_NAME",
             label: "State"
