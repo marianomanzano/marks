@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ArcGIS Maps SDK - Census Layer Example</title>
+
+ <header class="banner">
+  <img src="https://raw.githubusercontent.com/marianomanzano/marks/main/logo.png" alt="Logo" class="logo">
+
+  <div class="banner-content">
+    <h1>Election Precinct Viewer</h1>
+    <p>Interactive GIS Mapping Application</p>
+  </div>
+
+  
+
+</header> 
+  
+  <!-- ArcGIS Maps SDK -->
+  <script type="module" src="https://js.arcgis.com/5.1/"></script>
+
+  <style>
+    html,
+    body {
+  height: 100%;
+  margin: 0;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+.banner {
+  height: 90px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    #8DB600 0%,      /* Apple Green */
+    #5A8F00 35%,
+    #2E4600 70%,
+    #000000 100%     /* Black */
+  );
+
+  display: flex;
+  align-items: center;
+  padding: 0 30px;
+
+  box-sizing: border-box;
+
+  color: white;
+
+  box-shadow: 0 3px 8px rgba(0,0,0,.35);
+}
+
+.banner-content h1{
+  margin:0;
+  font-size:2rem;
+  font-weight:600;
+  letter-spacing:1px;
+}
+
+.banner-content p{
+  margin:4px 0 0;
+  font-size:1rem;
+  color:#e6e6e6;
+}
+
+.logo{
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    height:65px;
+    width:auto;
+    margin-right: 20px;
+} 
+arcgis-map {
+      height: calc(100vh - 90px);
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <arcgis-map
+    basemap="hybrid"
+    zoom="9"
+    center="-98.1637,26.3017">
+
+    <!-- <arcgis-zoom slot="top-left"></arcgis-zoom> -->
+
+    <!-- <arcgis-legend slot="bottom-right"></arcgis-legend> -->
+
+    <!-- <arcgis-search slot="top-right"></arcgis-search> -->
+
+  </arcgis-map>
+
+  <script type="module">
+
+ 
+    // Load FeatureLayer from the ArcGIS CDN
+    const FeatureLayer = await $arcgis.import(
+      "@arcgis/core/layers/FeatureLayer.js"
+    );
+
+    const GeoJSONLayer = await $arcgis.import(
+      "@arcgis/core/layers/GeoJSONLayer.js"
+    );
+
+    const Search = await $arcgis.import(
+  "@arcgis/core/widgets/Search.js"
+);
+
+const Legend = await $arcgis.import(
+  "@arcgis/core/widgets/Legend.js"
+);
+
+const Expand = await $arcgis.import(
+  "@arcgis/core/widgets/Expand.js"
+);
+
+const precinctLayer = new GeoJSONLayer({
+  url: "https://raw.githubusercontent.com/marianomanzano/marks/main/Election_Precincts_2025.json",
+  title: "Election Precincts 2025",
+
+opacity: .80,
+
+  outFields: ["*"],
+
+  renderer: {
+    type: "simple",
+    symbol: {
+      type: "simple-fill",
+      color: [0, 0, 0, 0],       // empty fill
+      outline: {
+      color: [0, 0, 0, 1],           // black outline
+      width: 1.5
+      }
+    }
+  },
+
+  labelingInfo: [{
+    labelExpressionInfo: {
+      expression: "$feature.DISTRICTN"
+    },
+
+    symbol: {
+      type: "text",
+      color: "black",
+
+      haloColor: "white",
+      haloSize: "2px",
+
+      font: {
+        family: "Arial",
+        size: 10,
+        weight: "bold"
+      }
+    },
+
+    labelPlacement: "always-horizontal"
+  }],
+
+
+
+
+
+  popupTemplate: {
+    title: "Precinct",
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "DISTRICTN",
+            label: "Precinct",
+            visible: "true"
+          }
+        ]
+      }
+    ]
+  }
+});
+
+    const mapElement = document.querySelector("arcgis-map");
+
+    // Wait until the map is ready
+    await mapElement.viewOnReady();
+
+    // Import navigation widgets
+const Home = await $arcgis.import(
+  "@arcgis/core/widgets/Home.js"
+);
+
+const Locate = await $arcgis.import(
+  "@arcgis/core/widgets/Locate.js"
+);
+
+const Zoom = await $arcgis.import(
+  "@arcgis/core/widgets/Zoom.js"
+);
+
+const Compass = await $arcgis.import(
+  "@arcgis/core/widgets/Compass.js"
+);
+
+
+// Home button
+const homeWidget = new Home({
+  view: mapElement.view
+});
+
+
+// Locate button
+const locateWidget = new Locate({
+  view: mapElement.view
+});
+
+
+// Zoom in/out buttons
+const zoomWidget = new Zoom({
+  view: mapElement.view
+});
+
+
+// Compass button
+const compassWidget = new Compass({
+  view: mapElement.view
+});
+
+const legend = new Legend({
+  view: mapElement.view
+});
+
+
+// Add widgets to the map UI
+mapElement.view.ui.add(homeWidget, "top-left");
+
+mapElement.view.ui.add(locateWidget, "top-left");
+
+mapElement.view.ui.add(zoomWidget, "top-left");
+
+mapElement.view.ui.add(compassWidget, "top-left");
+
+    // Create the Census layer
+    const censusLayer = new FeatureLayer({
+      url: "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/3",
+      title: "Census States",
+      outFields: ["*"],
+
+      popupTemplate: {
+        title: "{STATE_NAME}",
+        content: [
+          {
+            type: "text",
+            text: "<b>{STATE_NAME}</b><br>This state is located in the {SUB_REGION} region."
+          },
+          {
+            type: "fields",
+            fieldInfos: [
+              {
+                fieldName: "STATE_NAME",
+                label: "State"
+              },
+              {
+                fieldName: "SUB_REGION",
+                label: "Region"
+              },
+              {
+                fieldName: "POP2000",
+                label: "Population (2000)",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              },
+              {
+                fieldName: "POP2007",
+                label: "Population (2007)",
+                format: {
+                  digitSeparator: true,
+                  places: 0
+                }
+              },
+              {
+                fieldName: "POP00_SQMI",
+                label: "Population Density",
+                format: {
+                  digitSeparator: true,
+                  places: 1
+                }
+              }
+            ]
+          }
+        ]
+      }
+    });
+
+    // US Counties Employment Layer
+const employmentLayer = new FeatureLayer({
+  url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/US_counties_employment_2016/FeatureServer/0",
+
+  title: "US Counties Employment (2016)",
+
+  opacity: 0.70,
+
+  outFields: ["*"],
+
+  popupTemplate: {
+    title: "{NAME}, {STATE_NAME}",
+
+    content: [
+      {
+        type: "fields",
+        fieldInfos: [
+          {
+            fieldName: "NAME",
+            label: "County"
+          },
+          {
+            fieldName: "STATE_NAME",
+            label: "State"
+          },
+          {
+            fieldName: "TOTPOP_CY",
+            label: "Population"
+          },
+          {
+            fieldName: "MEDHINC_CY",
+            label: "Median Household Income"
+          },
+          {
+            fieldName: "UNEMPRT_CY",
+            label: "Unemployment Rate"
+          }
+        ]
+      }
+    ]
+  }
+});
+
+    // Add the layer to the map
+    mapElement.map.add(censusLayer);
+
+    mapElement.map.add(employmentLayer);
+
+    mapElement.map.add(precinctLayer);
+
+// Create a search widget
+   const searchWidget = new Search({
+  view: mapElement.view,
+
+  // Keep the default address search
+  includeDefaultSources: true,
+
+  sources: [
+    {
+      layer: precinctLayer,
+
+      searchFields: ["DISTRICTN"],
+
+      displayField: "DISTRICTN",
+
+      outFields: ["*"],
+
+      name: "Election Precincts",
+
+      placeholder: "Search Precinct Number",
+
+      exactMatch: false,
+
+      suggestionTemplate: "Precinct {DISTRICTN}",
+
+      popupEnabled: true,
+
+      maxResults: 10,
+
+      maxSuggestions: 10
+    }
+  ]
+});
+
+const BasemapGallery = await $arcgis.import(
+  "@arcgis/core/widgets/BasemapGallery.js"
+);
+
+const basemapGallery = new BasemapGallery({
+  view: mapElement.view
+});
+
+const bgExpand = new Expand({
+  view: mapElement.view,
+  content: basemapGallery,
+  expanded: false,
+  expandTooltip: "Basemap Gallery",
+  expandIcon: "basemap"
+});
+
+const legendExpand = new Expand({
+  view: mapElement.view,
+  content: legend,
+  expanded: false,
+  expandTooltip: "Legend",
+  expandIcon: "legend"
+});
+
+// Add the Search widget to the map
+mapElement.view.ui.add(homeWidget, "top-left");
+mapElement.view.ui.add(zoomWidget, "top-left");
+mapElement.view.ui.add(locateWidget, "top-left");
+mapElement.view.ui.add(compassWidget, "top-left");
+
+mapElement.view.ui.add(searchWidget, "top-right");
+
+mapElement.view.ui.add(bgExpand, "top-right");
+mapElement.view.ui.add(legendExpand, "bottom-left");
+    console.log("Map and Census layer loaded.");
+
+  </script>
+
+</body>
+</html>
